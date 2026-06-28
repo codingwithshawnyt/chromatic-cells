@@ -23,11 +23,12 @@ formal completion; the geometry/empirics are verified in the engine's test suite
 - **`transposition-update.md`** — the transposition update rules for the 6-pack
   (the algorithmic contribution): how an adjacent transposition propagates through
   the six interlinked reductions; the locality lemma (`O(1)` dirty columns) and the
-  CEM06-style case structure for image/kernel/cokernel. Framework derived; the
-  coupled-pack case enumeration is the remaining algebra.
-- **`complexity.md`** — the per-transposition cost bound: target `O(1)` amortised
-  (≤ 6× CEM06), reduced to the locality lemma; current placeholder is `O(suffix)`;
-  empirical protocol via column-addition counts.
+  CEM06-style update for image/kernel/cokernel. **Implemented and gated**
+  (`IncrementalChromaticSixPack`); the coupled-pack case enumeration is realised
+  uniformly via a worklist, self-verifying against the re-reduce oracle.
+- **`complexity.md`** — the per-transposition cost bound: `O(1)` amortised
+  (≤ 6× CEM06), reduced to the locality lemma; measured ≈ 65× fewer column ops
+  than the re-reduce regime, flat in `n` (column-addition counts).
 
 ## Status (2026-06-28)
 
