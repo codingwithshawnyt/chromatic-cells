@@ -18,8 +18,12 @@ formal completion; the geometry/empirics are verified in the engine's test suite
 
 - **`flip-handoff.md`** — the chromatic flip-handoff theorem: at a generic
   bistellar flip in the lifted chromatic Delaunay, dying and arriving simplices
-  share the empty-stack radius. Generic case proved; degenerate case = SoS
-  corollary. (Empirically certified in `vineyards/tests/test_chromatic_handoff.py`.)
+  share the empty-stack radius. **Generic case proved** — the admissible-centre
+  set (the chromatic Voronoi face, Lemma 3.1) collapses to a single point at the
+  flip, forcing the empty circumstack to be unique (no equal-radii conflation;
+  grounded entirely in the chromatic-alpha paper, Cor 3.7 / Lemmas 3.1, 3.6 /
+  Thm 4.6). Degenerate case = SoS corollary. (Empirically certified in
+  `vineyards/tests/test_chromatic_handoff.py`.)
 - **`transposition-update.md`** — the transposition update rules for the 6-pack
   (the algorithmic contribution): how an adjacent transposition propagates through
   the six interlinked reductions; the locality lemma (`O(1)` dirty columns) and the
@@ -37,7 +41,8 @@ simplex-level pairing (bit-exact vs `chromatic_tda`), the dynamic 6-pack
 maintained through transpositions (all six packs, gated vs recompute), the
 flip-handoff certified for bistellar flips, and **the `O(1)`-amortised
 per-transposition update (#1) implemented and gated** (`IncrementalChromaticSixPack`;
-~65× fewer column ops than re-reduce, flat in `n`). Open paper work: the
-complexity proof write-up (#2, empirically confirmed), the flip-handoff
-formalisation (#3, drafted), and 6-pack vine-identity tracking (#4). SoS
-(degenerate flips) is the deferred Edelsbrunner item.
+~65× fewer column ops than re-reduce, flat in `n`). The flip-handoff is now
+**proved for the generic flip** (#3, via Voronoi-face collapse / uniqueness).
+Open paper work: the complexity proof write-up (#2, empirically confirmed) and
+6-pack vine-identity tracking (#4). SoS (degenerate flips) is the deferred
+Edelsbrunner item.
