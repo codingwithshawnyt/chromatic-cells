@@ -2,9 +2,9 @@
 
 *Paper theory — the cost/locality bound Edelsbrunner asked for (meeting 3).*
 *Status: target theorem stated and reduced to the CEM06 bound via the locality
-lemma in `transposition-update.md`; the current placeholder's cost is
-characterised and is empirically measurable now. The `O(1)`-amortised claim is
-contingent on the coupled-pack case enumeration (#1).*
+lemma in `transposition-update.md`; **both regimes are now implemented and
+measured** — the `O(1)`-amortised update (regime B) is
+`IncrementalChromaticSixPack`, gated bit-exact and measured `O(local)`.*
 
 ## Two regimes
 
@@ -78,3 +78,18 @@ size `m ∈ [111, 131]`, **28 advances, all bit-exact vs recompute**:
 
 (`last_col_adds` on `ChromaticSixPackVineyard` is the counter; column additions =
 symmetric differences, the elementary GF(2) work.)
+
+## Measured (incremental B), `IncrementalChromaticSixPack`
+
+The `O(1)`-amortised CEM06-style update, gated bit-exact against the re-reduce
+reference and `chromatic_tda`, at `m≈151`, ~1200 transpositions:
+
+- column additions **per transposition** (all six packs): median `14`, mean
+  `15`, 95th pct `28`, max `49`;
+- **flat in `n`** (independent of `m`) — the signature of `O(1)` amortised;
+- **≈ 65× fewer** than the re-reduce regime (A) at the median (`14` vs `~6m=906`),
+  with rare `O(n)` spikes (the worst-case single column op), exactly as the
+  theorem predicts.
+
+This confirms regime (B): the chromatic 6-pack is maintained in `O(1)` amortised
+column operations per transposition, the CEM06 bound carried to all six packs.

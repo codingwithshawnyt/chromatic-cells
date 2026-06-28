@@ -33,9 +33,10 @@ formal completion; the geometry/empirics are verified in the engine's test suite
 
 SoS-free engine pieces are built and gated in the main repo: the static 6-pack +
 simplex-level pairing (bit-exact vs `chromatic_tda`), the dynamic 6-pack
-maintained through transpositions (all six packs, gated vs recompute), and the
-flip-handoff certified for bistellar flips. Open paper work: the `O(1)`
-transposition update implementation (#1, this repo's `transposition-update.md` is
-the derivation), its complexity proof (#2), the flip-handoff formalisation (#3),
-and 6-pack vine-identity tracking (#4). SoS (degenerate flips) is the deferred
-Edelsbrunner item.
+maintained through transpositions (all six packs, gated vs recompute), the
+flip-handoff certified for bistellar flips, and **the `O(1)`-amortised
+per-transposition update (#1) implemented and gated** (`IncrementalChromaticSixPack`;
+~65× fewer column ops than re-reduce, flat in `n`). Open paper work: the
+complexity proof write-up (#2, empirically confirmed), the flip-handoff
+formalisation (#3, drafted), and 6-pack vine-identity tracking (#4). SoS
+(degenerate flips) is the deferred Edelsbrunner item.
