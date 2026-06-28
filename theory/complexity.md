@@ -62,3 +62,19 @@ Measure, on flip-free intervals of moving two-colour clouds:
 The cross-check is bit-exactness of (B) against (A) transposition-for-
 transposition (A is the oracle), so the measured (B) cost is for a *verified*
 update. (A) is measurable today; (B) follows #1.
+
+## Measured (placeholder A), `theory/measure_placeholder_cost.py`
+
+Eight flip-free intervals of moving two-colour clouds, fine sub-steps, complex
+size `m ∈ [111, 131]`, **28 advances, all bit-exact vs recompute**:
+
+- suffix re-reduced (`m − first_divergence`): median `76`, max `108`;
+- column additions per advance: median `192`, max `281`;
+- **`corr(suffix length, column additions) = 0.92`** — the placeholder's work
+  scales with the re-reduced suffix, confirming regime (A) is `O(suffix)` and is
+  *not* yet locality-optimal. This is the quantitative motivation for the `O(1)`
+  update (B): the median advance re-reduces ~76 columns where the CEM06-style
+  update would touch `O(1)`.
+
+(`last_col_adds` on `ChromaticSixPackVineyard` is the counter; column additions =
+symmetric differences, the elementary GF(2) work.)
