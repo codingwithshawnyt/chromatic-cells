@@ -1,12 +1,15 @@
 # The chromatic flip-handoff theorem
 
 *Paper theory — application/paper-specific, lives in `chromatic-cells`.*
-*Status: **proved** for the generic (single transversal bistellar) flip — the
-case the theorem covers. The proof rests only on results of the chromatic-alpha
-paper (Cultrera di Montesano–Draganov–Edelsbrunner–Saghafian, *Chromatic Alpha
-Complexes*, 2024; lemma/theorem numbers below refer to it) plus one genericity
-hypothesis (a single, transversal cosphericity), whose failure is the
-degenerate case requiring SoS and is explicitly out of scope here.*
+*Status: **proved** for every generic (single transversal bistellar) flip —
+both the interior regime (finite cosphere, finite shared radius) and the hull
+regime (cosphere degenerating to an empty hyperplane, shared radius `∞`). The
+proof rests only on results of the chromatic-alpha paper (Cultrera di
+Montesano–Draganov–Edelsbrunner–Saghafian, *Chromatic Alpha Complexes*, 2024;
+lemma/theorem numbers below refer to it) plus one genericity hypothesis (a
+single, transversal cosphericity), whose failure — coincident or non-unique
+cosphericities — is the degenerate case requiring SoS and is the only thing out
+of scope here.*
 
 ## Setup and notation
 
@@ -64,19 +67,26 @@ changes of `Del(χ)`.
 
 ## Theorem (chromatic flip-handoff, generic case)
 
-> Let `t★` be a **generic** chromatic Delaunay bistellar flip: at `t★` exactly
-> `d+s+2` lifted points `Q̂` lie on a common sphere `Ŝ ⊂ ℝ^{d+s}` (centre
-> `ĉ=(z★,w★)`, radius `ρ̂`), empty of all other lifted points, this is the only
-> degeneracy at `t★`, and the cosphericity is transversal (so `Ŝ` — hence `ĉ` —
-> is the well-defined common limit of the participating circumspheres). Let
-> `D` be the simplices in `Del(χ)(t★⁻)∖Del(χ)(t★⁺)` (dying) and `A` those in
-> `Del(χ)(t★⁺)∖Del(χ)(t★⁻)` (arriving). Then every simplex in `D ∪ A` has the
-> same squared empty-stack radius at `t★`:
+> Let `t★` be a **generic interior** chromatic Delaunay bistellar flip: at `t★`
+> exactly `d+s+2` lifted points `Q̂` lie on a common **finite** sphere
+> `Ŝ ⊂ ℝ^{d+s}` (centre `ĉ=(z★,w★)`, radius `ρ̂ < ∞`), empty of all other lifted
+> points, this is the only degeneracy at `t★`, and the cosphericity is
+> transversal (so `Ŝ` — hence `ĉ` — is the well-defined common limit of the
+> participating circumspheres). Let `D` be the simplices in
+> `Del(χ)(t★⁻)∖Del(χ)(t★⁺)` (dying) and `A` those in `Del(χ)(t★⁺)∖Del(χ)(t★⁻)`
+> (arriving). Then every simplex in `D ∪ A` has the same squared empty-stack
+> radius at `t★`:
 >
 > `ϱ_{t★}(σ) = R²★` for all `σ ∈ D ∪ A`,    where  `R²★ = ρ̂² − min_i ‖w★ − h·v_i‖²`
 >
 > is the value of the empty stack obtained by projecting `Ŝ` to `ℝ^d`
 > (a stack with **unequal** per-colour radii, centred at `z★`).
+
+> The remaining generic regime — a **hull flip**, where `Ŝ` degenerates to an
+> empty hyperplane (`ρ̂ = ∞`) — is the Proposition after the proof; there the
+> shared value is `R²★ = ∞`. Together they cover every generic flip; the only
+> deferred case is the non-generic (coincident/degenerate) flip, the SoS
+> corollary.
 
 ## Proof
 
@@ -118,33 +128,79 @@ carries an empty stack at `t★`.
   `‖ĉ − b̂‖ ≥ ρ̂` for every other lifted point `b̂` (`Ŝ` empty). So `ĉ` is closest
   to each `â`, i.e. `ĉ ∈ ⋂_{a∈σ} dom(â, P̂) = F_σ(t★)`; projecting, `z★ ∈ F_σ`.
 
-- *`F_σ(t★)` is the single point `{ĉ}`.* The flip is *interior*: `Ŝ` is a
-  genuine finite sphere (`ρ̂ < ∞`), so every Voronoi face `F_σ(t)` for
-  `σ ∈ D ∪ A` is **bounded** (a hull flip, where `Ŝ` degenerates to a
-  hyperplane and `F_σ` is unbounded, is reduced to the interior case by the
-  standard vertex-at-infinity compactification — the ghost-simplex device the
-  kinetic-Delaunay engine already uses — under which `Ŝ` passes through the ghost
-  vertex). The vertices of `F_σ(t)` are the circumcentres of the
-  top-dimensional simplices of the flip that contain `σ`: every
-  `(d+s)`-dimensional coface of a dying `σ` is itself a dying flip simplex (a
-  surviving coface would keep `σ` alive), so each is a `(d+s)`-simplex spanned by
-  `d+s+1` points of `Q̂`. As `t → t★` such a simplex's `d+s+1` vertices lie on
-  the limiting sphere `Ŝ`, and the unique `(d+s−1)`-sphere through `d+s+1`
-  affinely independent points of `Ŝ` is `Ŝ` itself, so its circumcentre converges
-  to `Ŝ`'s centre `ĉ` (transversality keeps the simplex non-degenerate up to
-  `t★`, making `ĉ` the well-defined common limit). Hence **all** vertices of
-  `F_σ(t)` converge to the single point `ĉ`, and the bounded face `F_σ` — their
-  convex hull — collapses to `{ĉ}` at `t★`. With `ĉ ∈ F_σ(t★)` this gives
-  `F_σ(t★) = {ĉ}`, i.e. the admissible centre is forced to `z★ = proj(ĉ)`.
+- *`F_σ(t★)` is the single point `{ĉ}`.* As `Ŝ` is a genuine finite sphere, the
+  Voronoi face `F_σ(t)` of each `σ ∈ D ∪ A` is **bounded**, and its vertices are
+  the circumcentres of the `(d+s)`-simplices of the flip that contain `σ`. Every
+  top-dimensional coface of a dying `σ` is itself a dying flip simplex — a
+  surviving coface would keep `σ` alive — hence a `(d+s)`-simplex spanned by
+  `d+s+1` points of `Q̂`. The unique `(d+s−1)`-sphere through `d+s+1` affinely
+  independent points of `Ŝ` is `Ŝ` itself, so as `t → t★` each such circumcentre
+  converges to `Ŝ`'s centre `ĉ` (transversality keeps these simplices
+  non-degenerate up to `t★`, making `ĉ` the well-defined common limit). Thus
+  every vertex of `F_σ(t)` converges to `ĉ`, and the bounded face — their convex
+  hull — collapses to `{ĉ}`. With `ĉ ∈ F_σ(t★)` this gives `F_σ(t★) = {ĉ}`: the
+  admissible centre is forced to `z★ = proj(ĉ)`. (Hull flips, where `Ŝ`
+  degenerates to a hyperplane and `F_σ` is unbounded, are the Proposition below.)
 
-  (Consistency check with "`σ` dies/arrives": for a dying `σ`, `F_σ` is a
-  positive-dimensional polytope for `t<t★` and empty for `t>t★`; the generic
-  transition is precisely this collapse through the single point `z★`. Arriving
-  simplices are symmetric, with `t<t★` and `t>t★` exchanged.)
+  (Consistency check with "`σ` dies/arrives": for a dying `σ`, the bounded face
+  `F_σ` is non-empty for `t<t★` and empty for `t>t★` — a Voronoi vertex for a
+  top-dimensional `σ`, a higher-dimensional bounded cell for a lower-dimensional
+  one; the generic transition is precisely this collapse through the single point
+  `z★`. Arriving simplices are symmetric, with `t<t★` and `t>t★` exchanged.)
 
 Therefore `ϱ_{t★}(σ) = R²★` for every `σ ∈ D ∪ A`. Because each `F_σ(t★) = {ĉ}`
 shares the same point `ĉ`, all flip simplices share the same centre `z★` and the
 same value `R²★`. ∎
+
+## Proposition (hull flips)
+
+> Let `t★` be a generic **hull** flip: `d+s+1` finite lifted points `Q̂₀` become
+> coplanar on a hyperplane `Ĥ ⊂ ℝ^{d+s}` empty of all other lifted points (so the
+> cospherical sphere `Ŝ` degenerates to `Ĥ`, `ρ̂ = ∞`), and this is the only
+> degeneracy at `t★`. Then every simplex in `D ∪ A` has `ϱ_{t★}(σ) = ∞`: the
+> handoff holds with the extended common value `R²★ = ∞`.
+
+*Proof.* Compactify the lifted Delaunay complex with the point at infinity `ω`:
+
+```
+        Del⁺(P̂) = Del(P̂) ∪ { ω ∗ F : F a facet of conv(P̂) } ,
+```
+
+a triangulation of the sphere `𝕊^{d+s}` (the standard one-point
+compactification — equivalently the full boundary complex, lower **and** upper,
+of `conv(π(P̂))` under the paraboloid lift `π : x ↦ (x, ‖x‖²)`; Edelsbrunner &
+Harer, *Computational Topology*, §III). Bistellar flips of `Del(χ)` are exactly
+the bistellar flips of `Del⁺(P̂)` on `d+s+2` vertices that become cospherical on
+`𝕊^{d+s}`. The hull flip is the case where exactly one of those vertices is `ω`;
+the other `d+s+1` are the finite points `Q̂₀ ⊂ Ĥ`, and `Ŝ = Ĥ ∪ {ω}` is the
+"sphere through `ω`", i.e. the hyperplane `Ĥ`. Write `n̂` for the unit normal of
+`Ĥ` pointing to its empty side.
+
+Fix a finite `σ ∈ D ∪ A` (so `σ̂ ⊂ Ĥ`). By Lemma 3.1 its empty circumstacks
+have centres in `F_σ = ⋂_{a∈σ} dom(â, P̂)`, whose vertices are the circumcentres
+of the `(d+s)`-cofaces of `σ` in the flip. As in step (3), every top-dimensional
+coface of a dying (resp. arriving) `σ` is itself a flip simplex — a surviving
+coface would keep `σ` alive. Among them:
+
+- the **finite** flip simplex `Q̂₀` (the `d+s+1` coplanar points): its
+  circumsphere flattens to `Ĥ` as `t → t★`, so its circumcentre recedes to
+  infinity along `n̂`;
+- the **`ω`-cofaces** `Q̂∖{q} = ω ∗ (Q̂₀∖{q})`, `q ∉ σ`: each is dual to the
+  ideal Voronoi vertex in the direction normal to its hull facet, and those
+  facets converge to `Ĥ`, so these too recede to the ideal point along `n̂`.
+
+Hence every vertex of the closed face `F̄_σ ⊆ 𝕊^{d+s}` converges to the single
+**ideal** point `ĉ_∞` in direction `n̂`, and `F̄_σ` collapses to `{ĉ_∞}` at
+`t★`. The only admissible centre is therefore at infinity: the smallest empty
+circumstack of `σ` is the empty half-space bounded by `Ĥ` (radii `→ ∞`), so
+`ϱ_{t★}(σ) = ∞`. As `ĉ_∞` is common to all `σ ∈ D ∪ A`, they share `R²★ = ∞`. ∎
+
+The contrast with step (3) is exactly finite-vs-ideal centre: an interior flip
+forces the centre to the finite point `z★` (shared finite `R²★`); a hull flip
+forces it to the ideal point `ĉ_∞` (shared `R²★ = ∞`, a handoff at the top of the
+filtration — the participating bars are essential and exchange continuously). In
+both, the mechanism is the same: the admissible-centre set collapses to one
+point, forcing uniqueness.
 
 ## Why this closes the gap
 
@@ -163,10 +219,14 @@ unequal radii, so the equal-radii conflation never enters.
 Every ingredient is a cited result of the chromatic-alpha paper — Lemma 3.1
 (empty stack ⟺ Voronoi face), Lemma 3.6 and Corollary 3.7 (the lift), and
 Theorem 4.6 (`Rad` is generalised discrete Morse, framing the interval exchange)
-— together with one genericity hypothesis: that `t★` is a single transversal
-cosphericity, so `Ŝ` and its centre `ĉ` are well defined as the common limit of
-the participating circumspheres. No appeal to an unproved relation between the
-lifted-Delaunay radius and the empty-stack radius is required.
+— plus, for hull flips, the standard one-point compactification of the Delaunay
+complex. The single remaining hypothesis is that `t★` is one transversal
+cosphericity, so the centre `ĉ` (finite for an interior flip, ideal for a hull
+flip) is well defined as the common limit of the participating circumspheres. No
+appeal to an unproved relation between the lifted-Delaunay radius and the
+empty-stack radius is required, and the interior and hull regimes together
+exhaust the generic flips — only coincident/degenerate cosphericities (SoS)
+remain.
 
 ## Empirical confirmation
 

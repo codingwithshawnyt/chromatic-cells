@@ -18,11 +18,14 @@ formal completion; the geometry/empirics are verified in the engine's test suite
 
 - **`flip-handoff.md`** — the chromatic flip-handoff theorem: at a generic
   bistellar flip in the lifted chromatic Delaunay, dying and arriving simplices
-  share the empty-stack radius. **Generic case proved** — the admissible-centre
-  set (the chromatic Voronoi face, Lemma 3.1) collapses to a single point at the
-  flip, forcing the empty circumstack to be unique (no equal-radii conflation;
-  grounded entirely in the chromatic-alpha paper, Cor 3.7 / Lemmas 3.1, 3.6 /
-  Thm 4.6). Degenerate case = SoS corollary. (Empirically certified in
+  share the empty-stack radius. **Every generic flip proved** — both interior
+  (finite cosphere, finite shared radius) and hull (cosphere → empty hyperplane,
+  shared radius `∞`, via one-point compactification). The mechanism: the
+  admissible-centre set (the chromatic Voronoi face, Lemma 3.1) collapses to a
+  single point at the flip, forcing the empty circumstack to be unique (no
+  equal-radii conflation; grounded entirely in the chromatic-alpha paper, Cor 3.7
+  / Lemmas 3.1, 3.6 / Thm 4.6). Only coincident/degenerate cosphericities are
+  deferred (SoS corollary). (Empirically certified in
   `vineyards/tests/test_chromatic_handoff.py`.)
 - **`transposition-update.md`** — the transposition update rules for the 6-pack
   (the algorithmic contribution): how an adjacent transposition propagates through
