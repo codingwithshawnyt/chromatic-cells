@@ -9,7 +9,7 @@ Broadly-applicable engine code lives in the main `vineyards` repo
 holds what is specific to the paper/application: the theory (theorems, proofs,
 complexity), and (to come) the cell-data interface and biological analysis.
 
-Remote: `git@github.com:codingwithshawnyt/chromatic-vineyards.git`.
+Remote: `git@github.com:codingwithshawnyt/chromatic-cells.git`.
 
 ## theory/
 
