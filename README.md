@@ -49,3 +49,6 @@ per-transposition update (#1) implemented and gated** (`IncrementalChromaticSixP
 Open paper work: the complexity proof write-up (#2, empirically confirmed) and
 6-pack vine-identity tracking (#4). SoS (degenerate flips) is the deferred
 Edelsbrunner item.
+
+Research code from a summer internship project at ISTA (group of
+Herbert Edelsbrunner), June–July 2026.
