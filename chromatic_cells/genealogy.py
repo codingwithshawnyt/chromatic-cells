@@ -34,9 +34,17 @@ What is exact here, and what is a stated definition (the honest boundary).
          matching the project indicts.
       2. The merge PARTNER (who absorbed whom) -- :func:`assign_partners_by_volume`,
          the surviving cavity whose volume gains ~ the dying cavity's volume
-         (mass bookkeeping).  With two cavities this is forced; with three or more
-         it is a hypothesis that still needs adversarial validation.  It is marked
-         provisional throughout and must not be reported as settled.
+         (mass bookkeeping).  With two cavities this is FORCED (one survivor) and
+         correct.  With three or more it is a hypothesis, and it does NOT yet hold:
+         on the adversarial ``two_pair_coalescence`` scenario (two small cavities
+         fusing into two different survivors) the genealogy does not even return
+         clean records -- the H2 survivor vines fragment at each fusion flip, so
+         the count and fates are wrong and the volume partner has no signal (a
+         survivor's death radius does not grow through a merge).  Pinned by the
+         xfail test ``test_partner_choice_survives_the_adversarial_multi_cavity_case``.
+         A clean multi-lumen genealogy -- resolving the fragmentation from the
+         pairing (not a radius heuristic) and a partner observable that carries
+         signal -- is the open research; do NOT report multi-cavity as settled.
 """
 
 from __future__ import annotations

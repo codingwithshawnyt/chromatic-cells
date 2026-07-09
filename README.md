@@ -62,11 +62,18 @@ constrains the active ion-pumping rate of a coarsening embryo.
 **Honest scope.** Fusion-vs-resorption fate is exact from the pairing, and the
 readout is validated on the two-lumen regimes (fusion → 1.0, resorption → 0.0).
 Cavity *identity through* a fusion is a stated definition (the survivor's vine
-fragments at the flip; re-linked by radius) and the merge *partner* for ≥ 3
-cavities is provisional (mass bookkeeping) — a clean multi-lumen genealogy is the
-open work. `examples/blastocyst.py` is the cell-data pipeline (centroids + radii →
-weighted vineyard → genealogy → coalescence fraction); real data (Maître light-sheet,
-or Turlier's public simulator) plugs into it unchanged.
+fragments at the flip; re-linked by radius), and the merge *partner* is **forced
+and correct for two cavities but demonstrably does not hold for more**: on the
+adversarial `two_pair_coalescence` scenario (two small cavities fusing into two
+different survivors) the genealogy doesn't even return clean records — the H2
+survivor vines fragment at each fusion, so the count and fates come out wrong and
+the volume partner has no signal. This is pinned by an `xfail` test
+(`test_partner_choice_survives_the_adversarial_multi_cavity_case`); a clean
+multi-lumen genealogy — resolving the fragmentation from the *pairing* rather than
+a radius heuristic — is the open (SoCG-relevant) research. `examples/blastocyst.py`
+is the cell-data pipeline (centroids + radii → weighted vineyard → genealogy →
+coalescence fraction); real data (Maître light-sheet, or Turlier's public
+simulator) plugs into it unchanged.
 
 ## theory/
 
