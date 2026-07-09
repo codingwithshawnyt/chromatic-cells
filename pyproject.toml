@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chromatic-cells"
+version = "0.1.0"
+description = "Cell/void application of the vineyards engine: synthetic void scenarios and cavity genealogy (fusion vs resorption) toward lumen coarsening."
+authors = [{ name = "Shawn Ray" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "gudhi>=3.6",
+    # The general engine.  Install the sibling repo in the same environment
+    # (e.g. `pip install -e ../vineyards`); it is not published to PyPI.
+    "vineyards",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+# The animated demos (void_demo / pipeline_explainer / method_figure): 3D
+# rendering via PyVista + GIFs via Pillow, plots via matplotlib.
+demo = ["pyvista>=0.44", "pillow>=9", "matplotlib>=3.7"]
+
+[tool.setuptools.packages.find]
+include = ["chromatic_cells*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]

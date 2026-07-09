@@ -1,54 +1,102 @@
 # chromatic-cells
 
-Application- and paper-specific work for the **kinetic chromatic vineyard** —
-the dynamic chromatic 6-pack with vine identity, toward cell segregation
-(zebrafish germ-layer sorting; the *Medusa* line × the chromatic 6-pack).
+Application- and paper-specific work built on the general **`vineyards`** engine —
+kept out of that repo so it stays focused on general vineyard functionality.
+Two threads live here:
 
-Broadly-applicable engine code lives in the main `vineyards` repo
-(`vineyards/chromatic.py`, `vineyards/chromatic_vineyard.py`, tests). This repo
-holds what is specific to the paper/application: the theory (theorems, proofs,
-complexity), and (to come) the cell-data interface and biological analysis.
+1. **Void / lumen coarsening** (`chromatic_cells/`, `examples/`) — synthetic void
+   scenarios with known ground truth, and the cavity genealogy that reads fusion
+   vs resorption off the exact vineyard, toward lumen coarsening and pumping-rate
+   inference.
+2. **Kinetic chromatic vineyard** (`theory/`) — the dynamic chromatic 6-pack with
+   vine identity, toward cell segregation (zebrafish germ-layer sorting).
+
+The broadly-applicable engine — moving/kinetic vineyards, weighted (regular /
+Laguerre) alpha, the chromatic 6-pack, `assert_no_hidden` — lives in the
+`vineyards` repo. Install it in the same environment:
+
+```bash
+pip install -e ../vineyards          # the engine
+pip install -e .                     # this package (add [demo] for the animations)
+```
 
 Remote: `git@github.com:codingwithshawnyt/chromatic-cells.git`.
 
+## Void / lumen coarsening
+
+An enclosed cavity — a *lumen*, a void — is an **H2 hole**: sample points on its
+boundary and the alpha complex has a 2-dimensional class whose persistence (death
+value) is the cavity's radius. `chromatic_cells.synthetic` builds controllable
+scenarios where the void history is known by construction — **coalescence**
+(cavities fuse), **Ostwald ripening** (small cavities dissolve, mass-conserving),
+and a **null** control — so a topological pipeline can be checked against ground
+truth (`tests/test_synthetic.py`).
+
+### Watch the cavities change, watch the count respond
+
+Each scene is a side-by-side animation: **left**, the cavities (translucent blob =
+the void, dots = the boundary sample); **right**, the method's output — the number
+of enclosed voids (H2) drawn over time, stepping down the instant a blob merges or
+vanishes. Ripening's count falls 4 → 2 while the null model stays flat — the method
+tells them apart; coalescence also goes 4 → 2 but by a visibly different process.
+
+| Coalescence | Ostwald ripening | Null |
+|:---:|:---:|:---:|
+| ![coalescence](examples/media/coalescence.gif) | ![ripening](examples/media/ripening.gif) | ![null](examples/media/null.gif) |
+
+The filtration step (grow balls until a hole/void is born, then fills — one
+barcode bar) and the genus contrast (H1, not H2) are in
+`examples/pipeline_explainer.py` and `examples/void_demo.py`.
+
+### Cavity genealogy: fusion vs resorption from the exact pairing
+
+`chromatic_cells.genealogy` reads, off the exact `moving_vineyard`, HOW each cavity
+dies: **resorption** (the vine slides to the diagonal) vs **fusion** (an
+off-diagonal vine death — possible only through a flip, so invisible to a
+fixed-complex vineyard or a matching heuristic). `coalescence_fraction` = merges /
+(merges + resorptions), the readout that by Le Verge-Serandour & Turlier (2021)
+constrains the active ion-pumping rate of a coarsening embryo.
+
+![exact vs matching](examples/media/exact_vs_matching.png)
+
+**Honest scope.** Fusion-vs-resorption fate is exact from the pairing, and the
+readout is validated on the two-lumen regimes (fusion → 1.0, resorption → 0.0).
+Cavity *identity through* a fusion is a stated definition (the survivor's vine
+fragments at the flip; re-linked by radius) and the merge *partner* for ≥ 3
+cavities is provisional (mass bookkeeping) — a clean multi-lumen genealogy is the
+open work. `examples/blastocyst.py` is the cell-data pipeline (centroids + radii →
+weighted vineyard → genealogy → coalescence fraction); real data (Maître light-sheet,
+or Turlier's public simulator) plugs into it unchanged.
+
 ## theory/
 
-The paper's theoretical spine (drafts — proofs argued, careful steps flagged for
-formal completion; the geometry/empirics are verified in the engine's test suite):
+The kinetic-chromatic paper's theoretical spine (drafts — proofs argued, careful
+steps flagged for formal completion; geometry/empirics verified in the engine's
+test suite):
 
 - **`flip-handoff.md`** — the chromatic flip-handoff theorem: at a generic
   bistellar flip in the lifted chromatic Delaunay, dying and arriving simplices
-  share the empty-stack radius. **Every generic flip proved** — both interior
-  (finite cosphere, finite shared radius) and hull (cosphere → empty hyperplane,
-  shared radius `∞`, via one-point compactification). The mechanism: the
-  admissible-centre set (the chromatic Voronoi face, Lemma 3.1) collapses to a
-  single point at the flip, forcing the empty circumstack to be unique (no
-  equal-radii conflation; grounded entirely in the chromatic-alpha paper, Cor 3.7
-  / Lemmas 3.1, 3.6 / Thm 4.6). Only coincident/degenerate cosphericities are
-  deferred (SoS corollary). (Empirically certified in
+  share the empty-stack radius. Every generic flip proved (interior and hull, the
+  latter via one-point compactification); only coincident/degenerate
+  cosphericities are deferred (SoS corollary). (Empirically certified in
   `vineyards/tests/test_chromatic_handoff.py`.)
-- **`transposition-update.md`** — the transposition update rules for the 6-pack
-  (the algorithmic contribution): how an adjacent transposition propagates through
-  the six interlinked reductions; the locality lemma (`O(1)` dirty columns) and the
-  CEM06-style update for image/kernel/cokernel. **Implemented and gated**
-  (`IncrementalChromaticSixPack`); the coupled-pack case enumeration is realised
-  uniformly via a worklist, self-verifying against the re-reduce oracle.
+- **`transposition-update.md`** — the transposition update rules for the 6-pack:
+  how an adjacent transposition propagates through the six interlinked reductions;
+  the locality lemma (`O(1)` dirty columns) and the CEM06-style update. Implemented
+  and gated (`IncrementalChromaticSixPack`).
 - **`complexity.md`** — the per-transposition cost bound: `O(1)` amortised
-  (≤ 6× CEM06), reduced to the locality lemma; measured ≈ 65× fewer column ops
-  than the re-reduce regime, flat in `n` (column-addition counts).
+  (≤ 6× CEM06); measured ≈ 65× fewer column ops than the re-reduce regime, flat
+  in `n`.
 
-## Status (2026-06-28)
+## Status
 
-SoS-free engine pieces are built and gated in the main repo: the static 6-pack +
-simplex-level pairing (bit-exact vs `chromatic_tda`), the dynamic 6-pack
-maintained through transpositions (all six packs, gated vs recompute), the
-flip-handoff certified for bistellar flips, and **the `O(1)`-amortised
-per-transposition update (#1) implemented and gated** (`IncrementalChromaticSixPack`;
-~65× fewer column ops than re-reduce, flat in `n`). The flip-handoff is now
-**proved for the generic flip** (#3, via Voronoi-face collapse / uniqueness).
-Open paper work: the complexity proof write-up (#2, empirically confirmed) and
-6-pack vine-identity tracking (#4). SoS (degenerate flips) is the deferred
-Edelsbrunner item.
+SoS-free chromatic engine pieces are built and gated in the `vineyards` repo (the
+static 6-pack + simplex-level pairing bit-exact vs `chromatic_tda`, the dynamic
+6-pack through transpositions, the flip-handoff certified for bistellar flips, and
+the `O(1)`-amortised per-transposition update). The flip-handoff is proved for the
+generic flip. Open paper work: the complexity write-up, 6-pack vine-identity
+tracking, and the clean multi-lumen cavity genealogy. SoS (degenerate flips) is
+the deferred Edelsbrunner item.
 
 Research code from a summer internship project at ISTA (group of
 Herbert Edelsbrunner), June–July 2026.
