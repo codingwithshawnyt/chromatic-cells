@@ -29,6 +29,7 @@ from chromatic_cells.genealogy import (
     coalescence_fraction,
     stitch_fragments,
     assign_partners_by_volume,
+    assign_partners_by_location,
 )
 from chromatic_cells.imaging import (
     mask_centroids_radii,
@@ -55,6 +56,7 @@ __all__ = [
     "coalescence_fraction",
     "stitch_fragments",
     "assign_partners_by_volume",
+    "assign_partners_by_location",
     "mask_centroids_radii",
     "correspond_frames",
     "lumen_genealogy",

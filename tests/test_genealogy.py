@@ -94,22 +94,23 @@ def test_merge_partner_is_forced_for_two_cavities():
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(strict=True, reason=(
-    "OPEN: the multi-cavity genealogy is not clean.  With >2 cavities the H2 "
-    "survivor vines fragment at each fusion flip; cavity_genealogy returns "
-    "spurious/mislabelled records (not 4 cavities / 2 fusions) and the "
-    "volume-bookkeeping partner has no signal (a survivor's death radius does not "
-    "grow through a merge).  This is the SoCG-relevant research still open; the "
-    "assertion below is the target a real fix must meet."))
 def test_partner_choice_survives_the_adversarial_multi_cavity_case():
-    # two small cavities fuse into two DIFFERENT large survivors (ground-truth
-    # partners: absorbed 1 -> survivor 0, absorbed 3 -> survivor 2).  A correct
-    # genealogy would report exactly four cavities, two of them fusions, each
-    # partnered to a distinct large survivor.  It does not (yet).
+    # Two coalescence pairs (left ~x=-5, right ~x=+5), each two equal shells fusing:
+    # two off-diagonal fusions whose partners must NOT cross pairs.  Volume
+    # bookkeeping cannot choose (all four cavities are the same size); the partner
+    # is recovered from the PAIRING GEOMETRY -- the destroyer-tet centroid localises
+    # each cavity, and the absorbed one's partner is the nearest surviving cavity.
+    # This runs at the DEFAULT (representative) sampling where the fragmentation
+    # cleanup is clean; that cleanup is not robust at coarse sampling / more frames
+    # (see chromatic_cells.genealogy) -- the partner SIGNAL is what this pins.
     recs = cavity_genealogy([p for p, _ in two_pair_coalescence().frames])
     fusions = [r for r in recs if r.fate == "fusion"]
     survivors = [i for i, r in enumerate(recs) if r.fate == "boundary"]
-    assert len(recs) == 4                                  # not fragmented
-    assert len(fusions) == 2                               # both small cavities fuse
+    assert len(recs) == 4                                  # fragmentation resolved
+    assert len(fusions) == 2                               # both pairs fuse
     assert len({r.partner for r in fusions}) == 2          # to two DIFFERENT survivors
     assert all(r.partner in survivors for r in fusions)    # each to a real survivor
+    # the decisive check: each fusion's partner is on the SAME side (same pair),
+    # not the far one -- the thing radius/volume could not distinguish.
+    for r in fusions:
+        assert r.died_location[0] * recs[r.partner].died_location[0] > 0

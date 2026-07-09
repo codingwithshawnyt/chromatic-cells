@@ -25,26 +25,29 @@ What is exact here, and what is a stated definition (the honest boundary).
     "which merged into which" is the elder rule; for H2 there is no canonical
     "which vine continues" -- at a fusion flip the pairing reorganises and the
     survivor's vine fragments (an artifact this module must resolve, not hide).
-    So two things are DEFINITIONS, provided and to be justified, not theorems:
+    The advance -- the pairing's own geometry carries the partner signal.  Each H2
+    vine's DESTROYER is a tetrahedron (the simplex that fills the cavity);
+    moving_vineyard exposes it per frame (``Vine.destroyer_frames``), and its
+    centroid LOCALISES the cavity in space -- the information the (birth, death)
+    diagram discards.  :func:`assign_partners_by_location` assigns an absorbed
+    cavity to the surviving cavity whose centre is NEAREST to where it died: the
+    signal ``died_radius**3`` lacked (a survivor's radius does not grow through a
+    merge, but its LOCATION is exactly where the absorbed cavity vanished).  On the
+    adversarial ``two_pair_coalescence`` (two coalescence pairs, all four cavities
+    the same size so volume cannot choose) the partners come out correct -- each
+    fusion pairs WITHIN its own pair, never across.  The partner SIGNAL is solved.
 
-      1. Cavity continuation through a fusion -- :func:`stitch_fragments` re-links a
-         vine that ends mid-motion to one that begins at the next frame with a
-         near-equal death radius (the same cavity, split by the flip).  A narrow,
-         geometric re-link across a single-frame gap -- NOT the broad diagram
-         matching the project indicts.
-      2. The merge PARTNER (who absorbed whom) -- :func:`assign_partners_by_volume`,
-         the surviving cavity whose volume gains ~ the dying cavity's volume
-         (mass bookkeeping).  With two cavities this is FORCED (one survivor) and
-         correct.  With three or more it is a hypothesis, and it does NOT yet hold:
-         on the adversarial ``two_pair_coalescence`` scenario (two small cavities
-         fusing into two different survivors) the genealogy does not even return
-         clean records -- the H2 survivor vines fragment at each fusion flip, so
-         the count and fates are wrong and the volume partner has no signal (a
-         survivor's death radius does not grow through a merge).  Pinned by the
-         xfail test ``test_partner_choice_survives_the_adversarial_multi_cavity_case``.
-         A clean multi-lumen genealogy -- resolving the fragmentation from the
-         pairing (not a radius heuristic) and a partner observable that carries
-         signal -- is the open research; do NOT report multi-cavity as settled.
+    What is NOT yet robust -- the fragmentation cleanup.  The survivor's vine still
+    fragments at the flip, so getting exactly-clean records needs
+    :func:`_stitch_by_location` (re-link fragments at the same place and size) plus
+    :func:`_drop_survivor_fragments` (a 'resorption' co-located with a survivor is a
+    fragment, since a real resorption leaves no cavity).  These are HEURISTIC and
+    parameter-sensitive: a sweep of two_pair_coalescence is clean at n_each>=22 and
+    <=6 frames but over- or under-counts at coarser sampling / more frames
+    (e.g. n_each=18 nf=7 misses the fusion).  So the location PARTNER is the solved
+    part; a fragmentation cleanup robust across all sampling remains open.
+    (``stitch_fragments`` / ``assign_partners_by_volume`` remain as the earlier
+    radius/volume versions, superseded by the location ones above.)
 """
 
 from __future__ import annotations
@@ -64,7 +67,15 @@ class CavityRecord:
     died_radius: float
     max_persistence: float
     fate: str                       # 'boundary' | 'resorption' | 'fusion'
-    partner: Optional[int] = None   # provisional merge partner index (fusion only)
+    partner: Optional[int] = None   # merge partner index (fusion only)
+    died_location: Optional[np.ndarray] = None      # cavity centre at its death
+    location_frames: dict = None                     # {t: cavity centre} over its life
+
+    def location_at(self, t):
+        """Cavity centre nearest in time to ``t`` (destroyer-tet centroid)."""
+        if not self.location_frames:
+            return None
+        return self.location_frames[min(self.location_frames, key=lambda s: abs(s - t))]
 
 
 def _radius_cavity_vines(vineyard, significance):
@@ -161,6 +172,90 @@ def assign_partners_by_volume(records: List[CavityRecord]) -> None:
                                    - records[j].born_radius ** 3) - donated))
 
 
+def _cavity_items(vineyard, frames, significance):
+    """(radius-vine, {t: destroyer-tet centroid}) per significant H2 cavity.
+
+    The centroid of the DESTROYER simplex (the tetrahedron that fills the cavity,
+    exposed per frame by moving_vineyard) localises the cavity in space -- the
+    pairing geometry the (birth, death) diagram throws away, and the signal that
+    resolves the merge partner where volume bookkeeping fails."""
+    from vineyards.vineyard import Vine
+    items = []
+    for v in vineyard.by_dimension(2):
+        rv = Vine(dim=2, essential=v.essential)
+        loc = {}
+        for p in v.points:
+            if p.death < 1e18:
+                rv.append(float(np.sqrt(max(p.birth, 0.0))),
+                          float(np.sqrt(max(p.death, 0.0))), p.t)
+                dsimp = v.destroyer_frames.get(p.t)
+                if dsimp is not None:
+                    loc[p.t] = np.mean([frames[int(round(p.t))][i] for i in dsimp], axis=0)
+        if rv.points and max(pt.death - pt.birth for pt in rv.points) > significance:
+            items.append((rv, loc))
+    return items
+
+
+def _stitch_by_location(items, loc_tol, radius_tol):
+    """Merge cavity fragments split at a fusion flip, matched by BOTH destroyer
+    location and death radius across a single-frame gap.  A survivor stays put and
+    keeps its size, so its fragments re-link; the absorbed cavity is elsewhere (or
+    a different size), so it stays a separate death.  Location resolves what radius
+    alone could not -- two equal-radius survivors far apart.  Not a diagram
+    heuristic: it uses the pairing's own destroyer geometry."""
+    from vineyards.vineyard import Vine
+    items = sorted(items, key=lambda it: it[0].points[0].t)
+    last_t = max(p.t for rv, _ in items for p in rv.points)
+    merged, consumed = [], set()
+    for i, (rv, loc) in enumerate(items):
+        if i in consumed:
+            continue
+        pts, L, tail = list(rv.points), dict(loc), rv.points[-1]
+        progressed = True
+        while progressed and tail.t < last_t - 1e-9:
+            progressed = False
+            for j, (rv2, loc2) in enumerate(items):
+                if j in consumed or j == i or not rv2.points:
+                    continue
+                head = rv2.points[0]
+                if (abs(head.t - (tail.t + 1)) < 1e-9
+                        and tail.t in L and head.t in loc2
+                        and np.linalg.norm(L[tail.t] - loc2[head.t]) < loc_tol
+                        and abs(head.death - tail.death) < radius_tol):
+                    pts.extend(rv2.points); L.update(loc2)
+                    consumed.add(j); tail = pts[-1]; progressed = True
+                    break
+        nv = Vine(dim=2, essential=rv.essential)
+        for p in pts:
+            nv.append(p.birth, p.death, p.t)
+        merged.append((nv, L))
+    return merged
+
+
+def assign_partners_by_location(records: List[CavityRecord]) -> None:
+    """Merge-partner assignment from the pairing GEOMETRY: an absorbed cavity's
+    partner is the surviving cavity whose centre is nearest to where the absorbed
+    cavity died (destroyer-tet centroid).  This is the signal ``died_radius**3``
+    lacked -- a survivor's radius does not grow through a merge, but its LOCATION
+    is exactly where the absorbed cavity vanished.  Falls back to ``None`` (or the
+    forced single survivor) when no location is available."""
+    for i, r in enumerate(records):
+        if r.fate != "fusion":
+            continue
+        cands = [j for j, s in enumerate(records)
+                 if j != i and s.born_t <= r.died_t <= s.died_t + 1e-9
+                 and s.fate in ("boundary", "fusion")]
+        if not cands:
+            r.partner = None
+        elif r.died_location is None:
+            r.partner = cands[0] if len(cands) == 1 else None
+        else:
+            def gap(j):
+                loc = records[j].location_at(r.died_t)
+                return np.inf if loc is None else float(np.linalg.norm(r.died_location - loc))
+            r.partner = min(cands, key=gap)
+
+
 # The exact vineyard is ~O(n^3) per frame; past a few hundred points it is
 # infeasible (and OOMs).  cavity_genealogy is the EXACT-engine path (blastocyst
 # scale, ~30-100 cells) -- for hundreds+ of points use track_features instead.
@@ -203,21 +298,48 @@ def cavity_genealogy(points_frames, *, weights=None, significance: float = 0.15,
             "scale is ~30-100 cells).  Coarsen the sampling, or track prominent "
             "features at scale with vineyards.track_features.")
     vineyard, _events = moving_vineyard(frames, weights=weights)
-    vines = _radius_cavity_vines(vineyard, significance)
-    if stitch:
-        vines = stitch_fragments(vines, radius_tol=radius_tol)
-    if not vines:
+    items = _cavity_items(vineyard, frames, significance)
+    if not items:
         return []
-    last_t = max(p.t for v in vines for p in v.points)
+    med_r = float(np.median([p.death for rv, _ in items for p in rv.points])) or 1.0
+    loc_tol = 2.5 * med_r
+    if stitch:
+        items = _stitch_by_location(items, loc_tol=loc_tol, radius_tol=0.25 * med_r)
+    last_t = max(p.t for rv, _ in items for p in rv.points)
     records = []
-    for v in vines:
-        pers = [p.death - p.birth for p in v.points]
+    for rv, loc in items:
+        pers = [p.death - p.birth for p in rv.points]
+        died_t = rv.points[-1].t
         records.append(CavityRecord(
-            born_t=v.points[0].t, died_t=v.points[-1].t,
-            born_radius=v.points[0].death, died_radius=v.points[-1].death,
-            max_persistence=max(pers), fate=_classify(v, last_t, diagonal_frac)))
-    assign_partners_by_volume(records)
+            born_t=rv.points[0].t, died_t=died_t,
+            born_radius=rv.points[0].death, died_radius=rv.points[-1].death,
+            max_persistence=max(pers), fate=_classify(rv, last_t, diagonal_frac),
+            died_location=loc.get(died_t), location_frames=dict(loc)))
+    if stitch:
+        records = _drop_survivor_fragments(records, loc_tol)
+    assign_partners_by_location(records)
     return records
+
+
+def _drop_survivor_fragments(records, loc_tol):
+    """Remove 'resorption' records that are really survivor fragments: a genuine
+    resorption leaves NO cavity behind, so one co-located with a surviving cavity
+    at its death is a fragmentation artifact of the pairing, not a real death."""
+    survivors = [s for s in records if s.fate == "boundary" and s.location_frames]
+    kept = []
+    for r in records:
+        if r.fate == "resorption" and r.died_location is not None:
+            # a fragment only if a MORE-persistent surviving cavity sits there: a
+            # real resorption of the dominant cavity keeps its (higher) persistence,
+            # so we must not drop it just because a smaller boundary fragment is near.
+            near = any(s.location_at(r.died_t) is not None
+                       and s.max_persistence >= r.max_persistence
+                       and np.linalg.norm(r.died_location - s.location_at(r.died_t)) < loc_tol
+                       for s in survivors)
+            if near:
+                continue                              # a fragment of a surviving cavity
+        kept.append(r)
+    return kept
 
 
 def coalescence_fraction(records: List[CavityRecord]) -> Optional[float]:

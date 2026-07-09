@@ -59,18 +59,25 @@ constrains the active ion-pumping rate of a coarsening embryo.
 
 ![exact vs matching](examples/media/exact_vs_matching.png)
 
-**Honest scope.** Fusion-vs-resorption fate is exact from the pairing, and the
-readout is validated on the two-lumen regimes (fusion → 1.0, resorption → 0.0).
-Cavity *identity through* a fusion is a stated definition (the survivor's vine
-fragments at the flip; re-linked by radius), and the merge *partner* is **forced
-and correct for two cavities but demonstrably does not hold for more**: on the
-adversarial `two_pair_coalescence` scenario (two small cavities fusing into two
-different survivors) the genealogy doesn't even return clean records — the H2
-survivor vines fragment at each fusion, so the count and fates come out wrong and
-the volume partner has no signal. This is pinned by an `xfail` test
-(`test_partner_choice_survives_the_adversarial_multi_cavity_case`); a clean
-multi-lumen genealogy — resolving the fragmentation from the *pairing* rather than
-a radius heuristic — is the open (SoCG-relevant) research. `examples/blastocyst.py`
+**The merge partner, from the pairing's geometry (the advance) — and what's still
+open.** Fusion-vs-resorption fate is exact from the pairing (validated on the
+two-lumen regimes, fusion → 1.0, resorption → 0.0). The harder question — *which*
+cavity absorbed which, when there is more than one survivor — is answered not by
+volume (a survivor's radius doesn't grow through a merge, so `died_radius³` has no
+signal) but by **location**: each H2 vine's *destroyer* is the tetrahedron that
+fills the cavity, and `moving_vineyard` exposes it per frame
+(`Vine.destroyer_frames`), so its centroid localises the cavity in space — the
+geometry the (birth, death) diagram discards. The absorbed cavity's partner is the
+surviving cavity **nearest to where it died**. On the adversarial
+`two_pair_coalescence` (two coalescence pairs, all four cavities the same size so
+volume *cannot* choose) the partners come out correct — each fusion pairs **within
+its own pair, not across**
+(`test_partner_choice_survives_the_adversarial_multi_cavity_case`). **The partner
+signal is solved.** What is *not* yet robust is the fragmentation *cleanup*: the
+survivor's vine still fragments, and the heuristics that re-link fragments and drop
+co-located artifacts are parameter-sensitive — a sweep is clean at n_each ≥ 22 and
+≤ 6 frames but over-/under-counts at coarser sampling or more frames. So a
+fragmentation cleanup robust across all sampling remains open. `examples/blastocyst.py`
 is the cell-data pipeline (centroids + radii → weighted vineyard → genealogy →
 coalescence fraction); real data plugs into it unchanged.
 

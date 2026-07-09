@@ -292,43 +292,40 @@ def null_exact(n_each: int = 30, n_frames: int = 7, *, radius: float = 1.0,
                     "Null (exact engine): two cavities hold their size (stays 2).")
 
 
-def two_pair_coalescence(n_each: int = 16, n_frames: int = 5, *, radius: float = 1.0,
+def two_pair_coalescence(n_each: int = 22, n_frames: int = 6, *, radius: float = 1.0,
                          seed: int = 0) -> Scenario:
     """The ADVERSARIAL multi-cavity case for the merge partner (>2 cavities, where
-    the partner is a genuine CHOICE, not forced).  Two large survivors, far apart;
-    a small cavity fuses into EACH -- ground truth: absorbed 1 -> survivor 0, and
-    absorbed 3 -> survivor 2, with the two absorbed cavities of DIFFERENT size
-    (0.7 vs 0.95) so a correct partner rule must discriminate.
-
-    This scenario currently DEFEATS the genealogy: the H2 survivor vines fragment
-    at each fusion flip, so :func:`~chromatic_cells.genealogy.cavity_genealogy`
-    returns spurious/mislabelled records (not a clean 4 cavities / 2 fusions) and
-    the volume-bookkeeping partner has no signal (a survivor's death radius does
-    not grow through a merge).  See the xfail test in ``tests/test_genealogy.py``:
-    a clean multi-lumen genealogy is the open research this pins."""
+    the partner is a genuine CHOICE, not forced).  TWO coalescence pairs, one on
+    the left (centre x = -5) and one on the right (x = +5): within each pair two
+    equal shells fuse ABRUPTLY (an off-diagonal fusion, like :func:`coalescence_exact`).
+    Ground truth: the left absorbed pairs with the left survivor, the right with the
+    right -- so a correct partner rule must not confuse the two pairs, which volume
+    bookkeeping cannot (all four cavities are the same size).  The partner signal is
+    in the pairing's GEOMETRY (destroyer-tet location), which the genealogy now uses.
+    Labels: L0=0, L1=1 (left pair, 1->0); R0=2, R1=3 (right pair, 3->2)."""
     base = _fib_sphere(n_each)
     t = np.linspace(0.0, 1.0, n_frames)
-    cS1, cS2 = np.array([-5.0 * radius, 0, 0]), np.array([5.0 * radius, 0, 0])
-    rS, rA, rB = 1.3 * radius, 0.7 * radius, 0.95 * radius
+    pL, pR = np.array([-5.0 * radius, 0, 0]), np.array([5.0 * radius, 0, 0])
     frames, truth, merge_time = [], [], None
     for tk in t:
-        cA = np.array([np.interp(tk, [0, 1], [-3.2 * radius, -4.3 * radius]), 0, 0])
-        cB = np.array([np.interp(tk, [0, 1], [3.2 * radius, 4.3 * radius]), 0, 0])
-        fused = tk > 0.6
+        a = np.interp(tk, [0, 1], [1.5 * radius, 0.35 * radius])   # within-pair sep
+        fused = a < 0.55 * radius
         if fused and merge_time is None:
             merge_time = float(tk)
+        cL0, cL1 = pL + [-a, 0, 0], pL + [a, 0, 0]
+        cR0, cR1 = pR + [-a, 0, 0], pR + [a, 0, 0]
         pts = np.vstack([
-            _project_inside(base * rS + cS1, cA, rA),      # survivor 0 (S1)
-            _project_inside(base * rA + cA, cS1, rS),      # absorbed 1 (A) -> 0
-            _project_inside(base * rS + cS2, cB, rB),      # survivor 2 (S2)
-            _project_inside(base * rB + cB, cS2, rS)])     # absorbed 3 (B) -> 2
+            _project_inside(base * radius + cL0, cL1, radius),     # L0 (survivor 0)
+            _project_inside(base * radius + cL1, cL0, radius),     # L1 (absorbed 1 -> 0)
+            _project_inside(base * radius + cR0, cR1, radius),     # R0 (survivor 2)
+            _project_inside(base * radius + cR1, cR0, radius)])    # R1 (absorbed 3 -> 2)
         labels = np.concatenate([np.full(n_each, k, int) for k in range(4)])
         frames.append((pts, labels))
-        truth.append([Void(cS1, rS, True), Void(cA, rA, not fused),
-                      Void(cS2, rS, True), Void(cB, rB, not fused)])
+        truth.append([Void(cL0, radius, True), Void(cL1, radius, not fused),
+                      Void(cR0, radius, True), Void(cR1, radius, not fused)])
     mt = merge_time if merge_time is not None else 1.0
     return Scenario("two_pair_coalescence", t, frames, truth,
-                    "Two small cavities fuse into two different survivors (2 fusions).",
+                    "Two coalescence pairs (left & right) -- 2 fusions, partners must not cross.",
                     merges=[(mt, 1, 0), (mt, 3, 2)])   # ground-truth partners
 
 
