@@ -84,6 +84,8 @@ def stitch_fragments(vines, *, radius_tol: float = 0.08, gap: float = 1.0):
     supplies one.  It is a narrow single-frame geometric re-link, NOT diagram
     matching across the whole trajectory.  Returns a new list of merged vines."""
     from vineyards.vineyard import Vine
+    if not vines:                                    # no significant cavity to stitch
+        return []
     vines = sorted(vines, key=lambda v: v.points[0].t)
     last_t = max(p.t for v in vines for p in v.points)
     merged, consumed = [], set()
@@ -148,9 +150,16 @@ def assign_partners_by_volume(records: List[CavityRecord]) -> None:
                                    - records[j].born_radius ** 3) - donated))
 
 
+# The exact vineyard is ~O(n^3) per frame; past a few hundred points it is
+# infeasible (and OOMs).  cavity_genealogy is the EXACT-engine path (blastocyst
+# scale, ~30-100 cells) -- for hundreds+ of points use track_features instead.
+MAX_EXACT_POINTS = 300
+
+
 def cavity_genealogy(points_frames, *, weights=None, significance: float = 0.15,
                      diagonal_tol: float = 0.12, stitch: bool = True,
-                     radius_tol: float = 0.08) -> List[CavityRecord]:
+                     radius_tol: float = 0.08,
+                     max_points: int = MAX_EXACT_POINTS) -> List[CavityRecord]:
     """The cavity genealogy of a fixed-cardinality moving point cloud.
 
     Runs the exact vineyard, extracts the significant H2 cavities, classifies each
@@ -165,6 +174,23 @@ def cavity_genealogy(points_frames, *, weights=None, significance: float = 0.15,
     engine -- check :func:`vineyards.regular.assert_no_hidden` first."""
     from vineyards.vineyard import moving_vineyard
     frames = [np.asarray(f, float) for f in points_frames]
+    # Guard the exact engine before it runs (mirrors void_tracks): it needs a
+    # fixed-cardinality moving cloud, and it is ~O(n^3) per frame so a large cloud
+    # OOMs.  Fail loudly with guidance rather than crash.
+    sizes = {len(f) for f in frames}
+    if len(sizes) != 1:
+        raise ValueError(
+            "cavity_genealogy needs a fixed-cardinality moving point cloud (same "
+            f"number of points every frame); got frame sizes {sorted(sizes)}.  The "
+            "dense void scenarios cull points per frame -- use a *_exact scenario, "
+            "or cell centroids with stable identity.")
+    n = sizes.pop()
+    if n > max_points:
+        raise ValueError(
+            f"cavity_genealogy runs the EXACT vineyard (~O(n^3) per frame); {n} "
+            f"points/frame is past its feasible range (> {max_points}; blastocyst "
+            "scale is ~30-100 cells).  Coarsen the sampling, or track prominent "
+            "features at scale with vineyards.track_features.")
     vineyard, _events = moving_vineyard(frames, weights=weights)
     vines = _radius_cavity_vines(vineyard, significance)
     if stitch:

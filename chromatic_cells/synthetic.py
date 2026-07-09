@@ -350,6 +350,12 @@ def void_tracks(scenario: Scenario, *, significance: float = 0.15):
             "void_tracks needs a fixed-cardinality moving point cloud (same number "
             f"of points every frame); got frame sizes {sorted(n)}.  Use a *_exact "
             "scenario (coalescence_exact / ripening_exact / null_exact).")
+    npts = next(iter(n))
+    if npts > 300:                              # exact engine is ~O(n^3) per frame
+        raise ValueError(
+            f"void_tracks runs the EXACT vineyard (~O(n^3) per frame); {npts} "
+            "points/frame is past its feasible range (> 300).  Use a coarser "
+            "*_exact scenario, or track features at scale with track_features.")
 
     vy, _events = moving_vineyard(frames)
     cavities = []

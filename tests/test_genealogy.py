@@ -11,12 +11,44 @@ only where it is forced (two cavities); multi-cavity disambiguation is provision
 
 from __future__ import annotations
 
-from chromatic_cells.synthetic import coalescence_exact, ripening_exact, null_exact
-from chromatic_cells.genealogy import cavity_genealogy, coalescence_fraction
+import numpy as np
+import pytest
+
+from chromatic_cells.synthetic import coalescence, coalescence_exact, ripening_exact, null_exact
+from chromatic_cells.genealogy import cavity_genealogy, coalescence_fraction, stitch_fragments
 
 
 def _genealogy(scenario):
     return cavity_genealogy([p for p, _ in scenario.frames])
+
+
+# ------------------------------------------------------------------
+# Robustness: the exact-engine path must fail gracefully, not crash/OOM
+# ------------------------------------------------------------------
+
+def test_stitch_fragments_handles_empty():
+    # no significant cavity -> nothing to stitch (was: max() of empty -> ValueError)
+    assert stitch_fragments([]) == []
+
+
+def test_cavity_genealogy_empty_when_no_significant_cavity():
+    # a shell too sparse to enclose an H2 void yields zero cavities, cleanly
+    # (this is the path that reached the empty stitch_fragments crash)
+    assert cavity_genealogy([p for p, _ in coalescence_exact(n_each=6, n_frames=4).frames]) == []
+
+
+def test_cavity_genealogy_rejects_dense_scenario():
+    # the dense demo scenarios cull points per frame (varying cardinality); the
+    # exact engine cannot take them -- fail loudly BEFORE running, not OOM.
+    with pytest.raises(ValueError, match="fixed-cardinality"):
+        cavity_genealogy([p for p, _ in coalescence(4, 60).frames])
+
+
+def test_cavity_genealogy_rejects_oversized_cloud():
+    # a fixed-cardinality but too-large cloud would OOM the O(n^3) engine
+    big = [np.random.default_rng(0).random((400, 3)) for _ in range(2)]
+    with pytest.raises(ValueError, match="feasible range"):
+        cavity_genealogy(big)
 
 
 def test_fusion_and_resorption_are_distinguished():
