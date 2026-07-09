@@ -35,21 +35,34 @@ from pathlib import Path
 
 import numpy as np
 
-from chromatic_cells.imaging import masks_to_genealogy
+from chromatic_cells.imaging import masks_to_genealogy, estimate_anisotropy
 
 
 def load_volumes(folder):
     """Load a time series of 3D label volumes from ``folder`` (sorted by name).
-    Supports ``.npy`` natively; ``.tif``/``.tiff`` via tifffile (optional)."""
+    Supports ``.npy``, BlastoSPIM ``.npz`` (the 'labels' array), and ``.tif`` /
+    ``.tiff`` via tifffile (optional).
+
+    Getting a BlastoSPIM CONSECUTIVE series without the 15 GB zip: the viewer's
+    manifest lists every series and timestamp --
+    ``https://blastospim.flatironinstitute.org/data/manifest.json`` -- and each
+    timestamp is a small per-frame npz at
+    ``.../data/source/{SERIES}/{SERIES}_{TS}.npz`` (e.g. F22_023.npz .. F22_034.npz
+    for the F22 series, 12 adjacent frames).  Pick a series whose ``timestamp_order``
+    is consecutive integers (adjacent frames); the T-/F-/M-series are consecutive,
+    the 'Blast' (2.0) series is not."""
     folder = Path(folder)
     paths = sorted(p for p in folder.iterdir()
-                   if p.suffix.lower() in (".npy", ".tif", ".tiff"))
+                   if p.suffix.lower() in (".npy", ".npz", ".tif", ".tiff"))
     if not paths:
-        raise FileNotFoundError(f"no .npy/.tif label volumes in {folder}")
+        raise FileNotFoundError(f"no .npy/.npz/.tif label volumes in {folder}")
     vols = []
     for p in paths:
         if p.suffix.lower() == ".npy":
             vols.append(np.load(p))
+        elif p.suffix.lower() == ".npz":
+            z = np.load(p)
+            vols.append(z["labels"] if "labels" in z else z[list(z)[0]])
         else:
             try:
                 import tifffile
@@ -85,15 +98,23 @@ def _synthetic_shell_masks(n_cells=22, n_frames=5, grid=48, cell_r=1.6):
     return vols
 
 
-def run(volumes, *, voxel_size=(1.0, 1.0, 1.0), tracks=None):
+def run(volumes, *, voxel_size="auto", tracks=None):
+    # Real light-sheet voxels are ANISOTROPIC (z coarser than xy); the wrong ratio
+    # badly distorts the cavities -- on real F22 data, isotropic (1,1,1) misses the
+    # blastocoel entirely, while the geometric estimate (~11.6) finds it.  Use the
+    # imaging metadata's true spacing when you have it; else estimate from shapes.
+    if voxel_size == "auto":
+        az = estimate_anisotropy(volumes[len(volumes) // 2])
+        voxel_size = (az, 1.0, 1.0)
+        print(f"estimated z:xy voxel anisotropy ~ {az:.1f} (pass voxel_size=... to override)")
     records, fraction = masks_to_genealogy(volumes, voxel_size=voxel_size, tracks=tracks)
     print(f"\n{len(records)} cavity record(s); coalescence fraction = {fraction}")
     for i, r in enumerate(records):
         print(f"  cavity {i}: fate={r.fate:11s} born_r={r.born_radius:.2f} "
-              f"died_r={r.died_radius:.2f} t=[{r.born_t:.0f}..{r.died_t:.0f}]")
+              f"died_r={r.died_radius:.2f} t=[{r.born_t:.0f}..{r.died_t:.0f}] partner={r.partner}")
     print("\nReminder: this is the ENGINE on real geometry, not the pumping-rate "
-          "result (which needs lumen-resolved imaging).  Multi-cavity partner "
-          "genealogy is still open -- see chromatic_cells.genealogy.")
+          "result (which needs lumen-resolved imaging).  A single growing cavity is a "
+          "forming lumen; coalescence fraction needs a stage with MULTIPLE lumens.")
     return records, fraction
 
 
@@ -103,7 +124,7 @@ def main():
     else:
         print("no data path given -- running the synthetic label-mask self-test "
               "(cells on a shrinking shell; expect resorption, fraction 0.0).")
-        run(_synthetic_shell_masks())
+        run(_synthetic_shell_masks(), voxel_size=(1.0, 1.0, 1.0))
 
 
 if __name__ == "__main__":

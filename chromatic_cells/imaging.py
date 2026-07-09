@@ -57,6 +57,28 @@ def mask_centroids_radii(labels, *, voxel_size=(1.0, 1.0, 1.0), min_voxels: int 
     return ids, centroids, radii
 
 
+def estimate_anisotropy(labels):
+    """Estimate the z:xy voxel-spacing ratio of a 3D label volume from cell shapes.
+
+    Light-sheet microscopy (e.g. BlastoSPIM) has anisotropic voxels -- z coarser
+    than xy -- and the wrong voxel_size distorts the H2 cavities badly.  When the
+    imaging metadata is unavailable, this recovers the ratio geometrically: cells
+    are roughly round, so a cell's (xy-extent / z-extent) in voxels approximates
+    how much larger the z spacing is.  Returns ``r`` for ``voxel_size=(r, 1, 1)``
+    (the median over cells with a resolvable z-extent)."""
+    labels = np.asarray(labels)
+    ratios = []
+    for i in np.unique(labels):
+        if i == 0:
+            continue
+        zz, yy, xx = np.where(labels == i)
+        zext = zz.max() - zz.min() + 1
+        if zext > 2:
+            xyext = 0.5 * ((yy.max() - yy.min() + 1) + (xx.max() - xx.min() + 1))
+            ratios.append(xyext / zext)
+    return float(np.median(ratios)) if ratios else 1.0
+
+
 def _reorder(prev_c, cur_c):
     """Hungarian assignment of current centroids to previous ones -> a permutation
     ``perm`` with ``cur_c[perm][k]`` matched to ``prev_c[k]``."""

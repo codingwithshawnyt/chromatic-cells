@@ -18,6 +18,20 @@ from chromatic_cells.imaging import (
 )
 
 
+def test_estimate_anisotropy_detects_z_compression():
+    from chromatic_cells.imaging import estimate_anisotropy
+    # cells physically round but rendered with z 4x coarser: xy-radius 8, z-radius 2
+    G = 44
+    zz, yy, xx = np.mgrid[0:G, 0:G, 0:G]
+    vol = np.zeros((G, G, G), int)
+    for k, c in enumerate([(22, 12, 12), (22, 12, 32), (22, 32, 22)]):
+        vol[((zz - c[0]) / 2.5) ** 2 + ((yy - c[1]) / 9.) ** 2
+            + ((xx - c[2]) / 9.) ** 2 <= 1] = k + 1
+    r = estimate_anisotropy(vol)
+    assert 2.5 < r < 6.0             # detects strong z anisotropy (true ~= 3.6)
+    assert abs(estimate_anisotropy(np.zeros((10, 10, 10), int)) - 1.0) < 1e-9  # empty -> 1
+
+
 def test_mask_centroids_radii_matches_known_geometry():
     vol = np.zeros((30, 30, 30), int)
     vol[5:9, 5:9, 5:9] = 1            # 64-voxel cube, centre (6.5, 6.5, 6.5)

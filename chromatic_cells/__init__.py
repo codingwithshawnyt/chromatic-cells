@@ -33,6 +33,7 @@ from chromatic_cells.genealogy import (
 )
 from chromatic_cells.imaging import (
     mask_centroids_radii,
+    estimate_anisotropy,
     correspond_frames,
     lumen_genealogy,
     masks_to_genealogy,
@@ -58,6 +59,7 @@ __all__ = [
     "assign_partners_by_volume",
     "assign_partners_by_location",
     "mask_centroids_radii",
+    "estimate_anisotropy",
     "correspond_frames",
     "lumen_genealogy",
     "masks_to_genealogy",
