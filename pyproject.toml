@@ -19,10 +19,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7.0"]
+test = ["pytest>=7.0", "scipy>=1.10"]
 # The animated demos (void_demo / pipeline_explainer / method_figure): 3D
 # rendering via PyVista + GIFs via Pillow, plots via matplotlib.
 demo = ["pyvista>=0.44", "pillow>=9", "matplotlib>=3.7"]
+# Imaging ingest (chromatic_cells.imaging / examples/blastospim.py): label-mask
+# segmentations -> centroids + radii (scipy); TIFF input additionally needs tifffile.
+imaging = ["scipy>=1.10"]
 
 [tool.setuptools.packages.find]
 include = ["chromatic_cells*"]

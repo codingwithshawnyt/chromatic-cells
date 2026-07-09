@@ -30,38 +30,13 @@ Run:  python examples/blastocyst.py
 """
 from __future__ import annotations
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import numpy as np
 
 from chromatic_cells.synthetic import _fib_sphere, _project_inside, coalescence_exact, ripening_exact
 from chromatic_cells.genealogy import cavity_genealogy, coalescence_fraction
-from vineyards.regular import assert_no_hidden
-
-
-def lumen_genealogy(centroids_frames: List[np.ndarray],
-                    radii_frames: Optional[List[np.ndarray]] = None,
-                    *, significance: float = 0.15, check_hidden: bool = True):
-    """Lumen genealogy of a moving cell population.
-
-    ``centroids_frames``: list of ``(n, 3)`` cell-centre arrays, one per timepoint,
-    with cell identity by row (a fixed cell set moving over time).  ``radii_frames``
-    (optional): matching ``(n,)`` cell radii per timepoint; if given, the weighted
-    (regular) alpha complex is used, so the H2 voids are the interstitial lumens.
-
-    Cell radii generally vary per frame; the frame-bound engine here takes a single
-    (constant) weight per cell, so we use each cell's mean radius -- adequate while
-    radii vary slowly, and flagged honestly (per-frame weights are the exact
-    extension).  Returns ``(records, coalescence_fraction)``."""
-    weights = None
-    if radii_frames is not None:
-        r = np.asarray([np.asarray(rr, float) for rr in radii_frames])   # (T, n)
-        weights = (r.mean(axis=0)) ** 2                                  # squared radii
-        if check_hidden:
-            assert_no_hidden(centroids_frames[0], weights)               # scope guard
-    records = cavity_genealogy(centroids_frames, weights=weights,
-                               significance=significance)
-    return records, coalescence_fraction(records)
+from chromatic_cells.imaging import lumen_genealogy   # (moved to the package; shared with blastospim)
 
 
 def two_regime_readout() -> dict:

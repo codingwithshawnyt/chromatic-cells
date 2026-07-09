@@ -72,8 +72,25 @@ the volume partner has no signal. This is pinned by an `xfail` test
 multi-lumen genealogy — resolving the fragmentation from the *pairing* rather than
 a radius heuristic — is the open (SoCG-relevant) research. `examples/blastocyst.py`
 is the cell-data pipeline (centroids + radii → weighted vineyard → genealogy →
-coalescence fraction); real data (Maître light-sheet, or Turlier's public
-simulator) plugs into it unchanged.
+coalescence fraction); real data plugs into it unchanged.
+
+### Real embryo data (BlastoSPIM)
+
+`chromatic_cells.imaging` / `examples/blastospim.py` ingest **labeled segmentation
+masks** — the format of the public **BlastoSPIM** light-sheet dataset (Nunley,
+Posfai, Shvartsman, Brown; blastospim.flatironinstitute.org): per-frame 3D nucleus
+masks → cell centroids (`center_of_mass`) + radii (voxel count → equivalent-sphere)
+→ weighted `moving_vineyard` → genealogy. No GPU segmentation needed; run
+`python examples/blastospim.py /path/to/series` (or with no argument for a
+synthetic-mask self-test). Two honest caveats it enforces/states: (1) `moving_vineyard`
+needs the **same cell in row *i* every frame** — the vineyard supplies *vine*
+identity, not *cell* correspondence, so pass BlastoSPIM's lineage tracking or use
+the built-in nearest-centroid fallback over a **division-free** window (cell
+division changes the count and is rejected); (2) this validates **the engine on
+real embryo geometry**, not yet the pumping-rate biology, which needs
+lumen-resolved, ion-perturbed imaging (Turlier / Maître). Persistence tolerances
+are scale-invariant (resorption is judged relative to each cavity's own peak) and
+the geometry is normalized to the mean cell radius, so voxel/micron data works.
 
 ## theory/
 

@@ -124,10 +124,13 @@ def stitch_fragments(vines, *, radius_tol: float = 0.08, gap: float = 1.0):
     return merged
 
 
-def _classify(vine, last_t, diagonal_tol):
+def _classify(vine, last_t, diagonal_frac):
+    # "resorbed" = decayed to a small FRACTION of its own peak persistence -- a
+    # scale-invariant test, so it works on unit synthetic data and on voxel/micron
+    # real data alike (an absolute tolerance would never fire on real-scale radii).
     pers = [p.death - p.birth for p in vine.points]
-    if pers[-1] < diagonal_tol:
-        return "resorption"                       # slid to the diagonal
+    if pers[-1] < diagonal_frac * max(pers):
+        return "resorption"                       # slid (relatively) to the diagonal
     if vine.points[-1].t >= last_t - 1e-9:
         return "boundary"                         # still alive at the end
     return "fusion"                               # off-diagonal death at a flip
@@ -165,7 +168,7 @@ MAX_EXACT_POINTS = 300
 
 
 def cavity_genealogy(points_frames, *, weights=None, significance: float = 0.15,
-                     diagonal_tol: float = 0.12, stitch: bool = True,
+                     diagonal_frac: float = 0.2, stitch: bool = True,
                      radius_tol: float = 0.08,
                      max_points: int = MAX_EXACT_POINTS) -> List[CavityRecord]:
     """The cavity genealogy of a fixed-cardinality moving point cloud.
@@ -212,7 +215,7 @@ def cavity_genealogy(points_frames, *, weights=None, significance: float = 0.15,
         records.append(CavityRecord(
             born_t=v.points[0].t, died_t=v.points[-1].t,
             born_radius=v.points[0].death, died_radius=v.points[-1].death,
-            max_persistence=max(pers), fate=_classify(v, last_t, diagonal_tol)))
+            max_persistence=max(pers), fate=_classify(v, last_t, diagonal_frac)))
     assign_partners_by_volume(records)
     return records
 
