@@ -114,6 +114,28 @@ imaging (Turlier / Maître), and seeing coarsening needs a stage with *multiple*
 lumens. Persistence tolerances are scale-invariant and geometry is normalized to
 the mean cell radius, so voxel/micron data works.
 
+### The resolution floor of centroid TDA (what it can and cannot see)
+
+A structural limit worth knowing *before* trusting a coarsening measurement on
+nuclear data: a lumen registers as a distinct persistent H2 void of the
+cell-**centroid** alpha complex only once it is large relative to the cell spacing.
+`examples/microlumen_resolution.py` (locked in `tests/test_resolution.py`) sweeps
+lumen-size / cell-spacing on a packing with carved-out lumens and finds a sharp,
+disorder-robust threshold:
+
+| lumen radius / cell spacing | resolved as a persistent H2 void? |
+|:---:|:---:|
+| ≤ 1.0 (interface-scale microlumen) | **no** — persistence ≈ 0, drowns in the packing |
+| ≥ 1.5 (blastocoel / grown microlumen) | **yes** — and several are separated (3/3) |
+
+So centroid TDA sees the **blastocoel**, and microlumens **only once they have grown
+past ~1.5 cell spacings** — sub-cell-spacing microlumens at cell–cell interfaces are
+structurally invisible to it (weighting doesn't change this). That is exactly why
+the real F22 embryo shows a single cavity, and it sharpens the biology: measuring
+microlumen coarsening needs either the microlumens grown past the floor, or the
+**lumen-resolved** (membrane/fluid) channel rather than nuclei — the thing only the
+Maître lab's imaging provides.
+
 ## theory/
 
 The kinetic-chromatic paper's theoretical spine (drafts — proofs argued, careful
